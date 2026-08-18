@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --text: #1f2430;
+      --muted: #8a90a2;
+      --border: #e3e6ec;
+      --accent: #4f66f5;
+      --accent-hover: #3d54e0;
+      --danger: #ef5b62;
+      --done: #a9aec0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161c;
+        --card: #1e212b;
+        --text: #eceef4;
+        --muted: #878da0;
+        --border: #2c313d;
+        --accent: #6b7dff;
+        --accent-hover: #808fff;
+        --danger: #ff6b72;
+        --done: #5a5f70;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 16px;
+    }
+    .app {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .input-row-inline {
+      display: flex;
+      gap: 8px;
+    }
+    #newTodo {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+    }
+    #newTodo:focus { border-color: var(--accent); }
+    #deadline {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+    }
+    #deadline:focus { border-color: var(--accent); }
+    #addBtn {
+      padding: 0 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #addBtn:hover { background: var(--accent-hover); }
+    ul { list-style: none; }
+    .todo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .todo:last-child { border-bottom: none; }
+    .todo input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .todo-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .todo .text {
+      word-break: break-word;
+    }
+    .todo.done .text {
+      text-decoration: line-through;
+      color: var(--done);
+    }
+    .deadline-tag {
+      font-size: 0.75rem;
+      color: var(--danger);
+      font-weight: 600;
+    }
+    .deadline-tag.today {
+      color: var(--danger);
+      background: rgba(239, 91, 98, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    .deadline-tag.future {
+      color: var(--muted);
+    }
+    .todo.done .deadline-tag {
+      color: var(--done);
+    }
+    .del {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .del:hover { color: var(--danger); background: var(--bg); }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 24px 0;
+      font-size: 0.95rem;
+    }
+    .footer {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .clear-done {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .clear-done:hover { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>To-Do List</h1>
+    <p class="subtitle">Auto-saved to browser</p>
+
+    <div class="input-row">
+      <input type="text" id="newTodo" placeholder="Enter a task" autocomplete="off">
+      <div class="input-row-inline">
+        <input type="date" id="deadline" title="Deadline">
+        <button id="addBtn">Add</button>
+      </div>
+    </div>
+
+    <ul id="list"></ul>
+
+    <div class="footer">
+      <span id="remaining"></span>
+      <button class="clear-done" id="clearDone">Clear completed</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "todos";
+    let todos = [];
+
+    const listEl = document.getElementById("list");
+    const inputEl = document.getElementById("newTodo");
+    const deadlineEl = document.getElementById("deadline");
+    const addBtn = document.getElementById("addBtn");
+    const remainingEl = document.getElementById("remaining");
+    const clearDoneBtn = document.getElementById("clearDone");
+
+    function load() {
+      try {
+        todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch (e) {
+        todos = [];
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    function addTodo() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      const deadline = deadlineEl.value || null;
+      todos.push({ id: Date.now(), text: text, done: false, deadline: deadline });
+      inputEl.value = "";
+      deadlineEl.value = "";
+      save();
+      render();
+      inputEl.focus();
+    }
+
+    function toggleTodo(id) {
+      const t = todos.find(t => t.id === id);
+      if (t) t.done = !t.done;
+      save();
+      render();
+    }
+
+    function deleteTodo(id) {
+      todos = todos.filter(t => t.id !== id);
+      save();
+      render();
+    }
+
+    function clearDone() {
+      todos = todos.filter(t => !t.done);
+      save();
+      render();
+    }
+
+    function getDeadlineDisplay(deadline) {
+      if (!deadline) return null;
+      const today = new Date().toISOString().split('T')[0];
+      if (deadline === today) return "today";
+      return deadline;
+    }
+
+    function render() {
+      listEl.innerHTML = "";
+
+      if (todos.length === 0) {
+        const li = document.createElement("li");
+        li.className = "empty";
+        li.textContent = "No tasks yet 🎉";
+        listEl.appendChild(li);
+      } else {
+        const sorted = [...todos].sort((a, b) => {
+          const aDeadline = a.deadline || "9999-12-31";
+          const bDeadline = b.deadline || "9999-12-31";
+          return aDeadline.localeCompare(bDeadline);
+        });
+
+        sorted.forEach(todo => {
+          const li = document.createElement("li");
+          li.className = "todo" + (todo.done ? " done" : "");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = todo.done;
+          checkbox.addEventListener("change", () => toggleTodo(todo.id));
+
+          const content = document.createElement("div");
+          content.className = "todo-content";
+
+          const span = document.createElement("span");
+          span.className = "text";
+          span.textContent = todo.text;
+
+          content.appendChild(span);
+
+          if (todo.deadline) {
+            const deadline = document.createElement("span");
+            const display = getDeadlineDisplay(todo.deadline);
+            deadline.textContent = display === "today" ? "📌 today" : todo.deadline;
+            deadline.className = "deadline-tag" + (display === "today" ? " today" : " future");
+            content.appendChild(deadline);
+          }
+
+          const del = document.createElement("button");
+          del.className = "del";
+          del.textContent = "×";
+          del.title = "Delete";
+          del.addEventListener("click", () => deleteTodo(todo.id));
+
+          li.appendChild(checkbox);
+          li.appendChild(content);
+          li.appendChild(del);
+          listEl.appendChild(li);
+        });
+      }
+
+      const remaining = todos.filter(t => !t.done).length;
+      remainingEl.textContent = `${remaining} remaining · ${todos.length} total`;
+    }
+
+    addBtn.addEventListener("click", addTodo);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter") addTodo();
+    });
+    clearDoneBtn.addEventListener("click", clearDone);
+
+    load();
+    render();
+  </script>
+</body>
+</html>
